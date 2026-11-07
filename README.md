@@ -1,118 +1,136 @@
-# Blue Mart Retail Analytics — Streamlit Portfolio
+# Blue Mart Retail Analytics
 
-Web dashboard tương tác xây dựng từ **dữ liệu Blue Mart thật trong project đã lưu** (không phải dữ liệu ngẫu nhiên). Ứng dụng chạy độc lập với Power BI; phù hợp để giới thiệu trong CV/Portfolio.
+Phân tích hiệu quả kinh doanh bán lẻ đa kênh bằng **Power BI, Python và Streamlit**.
 
-## 1. Bạn nhận được gì?
+## Tổng quan
 
-- **4 trang:** (1) Tổng quan & mùa vụ, (2) Kênh & điểm bán, (3) Chiến dịch & chiết khấu, (4) Danh mục sản phẩm.
-- **Bộ lọc toàn cục:** khoảng thời gian, thành phố, loại cửa hàng, kênh bán, ngành hàng và thương hiệu.
-- **KPI:** Doanh thu, lợi nhuận gộp, GM%, số lượng hàng bán ra, dòng bán.
-- **Biểu đồ tương tác:** di chuột, zoom, lọc, xem tooltip và tải dữ liệu tổng hợp.
-- **Dữ liệu đã có sẵn:** `data/sales.csv.gz`, `data/skus.csv`, `data/stores.csv`. Không cần kết nối Power BI Service và không cần file `.pbix` để chạy.
+Blue Mart Retail Analytics phân tích doanh thu, lợi nhuận gộp, hiệu quả chiết khấu và đóng góp của danh mục sản phẩm trong một chuỗi bán lẻ mô phỏng.
 
-> Đây là **bản tái dựng web**, không phải bản sao pixel-perfect mọi visual, slicer, tooltip và DAX của `.pbix`. Các KPI cốt lõi đã được đối chiếu với dữ liệu nguồn.
+Dự án sử dụng dữ liệu từ **01/01/2021 đến 31/10/2025**, bao gồm **50 cửa hàng, 200 SKU và 5 kênh bán hàng**. Kết quả được trình bày qua bốn trang dashboard Power BI và phiên bản web tương tác bằng Streamlit.
 
-## 2. Chạy trên Windows (dễ nhất)
+## Bài toán kinh doanh
 
-1. Cài [Python](https://www.python.org/downloads/) 3.11 hoặc 3.12 và chọn **Add python.exe to PATH** khi cài.
-2. Giải nén toàn bộ ZIP (không chạy trực tiếp bên trong ZIP).
-3. Nhấp đúp vào **`run_windows.bat`**. Lần đầu máy sẽ tạo môi trường Python và cài các thư viện; cần kết nối Internet.
-4. Khi thấy `Local URL: http://localhost:8501`, mở đường dẫn đó trong trình duyệt.
-5. Để dừng web, quay lại cửa sổ lệnh và nhấn `Ctrl+C`.
+- Doanh thu và lợi nhuận gộp thay đổi như thế nào theo thời gian?
+- Biến động kinh doanh tập trung ở những kênh bán và cửa hàng nào?
+- Mức chiết khấu nào xuất hiện rủi ro bán dưới giá vốn?
+- Những ngành hàng và SKU nào đóng góp chính vào kết quả kinh doanh?
 
-### Cách chạy bằng PowerShell (nếu muốn tự gõ lệnh)
+## Dữ liệu
 
-Mở PowerShell bên trong thư mục đã giải nén, chạy **lần lượt**:
+| Thành phần | Phạm vi |
+| --- | --- |
+| Thời gian | 01/01/2021–31/10/2025 |
+| Dòng bán sau xử lý | 641.126 |
+| Sản phẩm | 200 SKU |
+| Cửa hàng | 50 |
+| Thành phố | Dubai, Abu Dhabi, Sharjah |
+| Kênh bán | Store, Website, MobileApp, Amazon.ae, Noon |
+| Bảng dữ liệu chính | `sales`, `skus`, `stores` |
 
-```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m streamlit run app.py
-```
+> Mỗi dòng bán ghi nhận một SKU và có thể gồm nhiều đơn vị sản phẩm. Số dòng bán không tương đương số đơn hàng hoặc số khách hàng.
 
-**Không sao chép phần dấu nhắc `PS C:\...>`** từ hướng dẫn vào PowerShell.
+## Công cụ sử dụng
 
-Bạn cũng có thể xác minh số liệu:
+| Công cụ | Vai trò |
+| --- | --- |
+| Python, Pandas | Chuẩn hóa, kiểm tra và tổng hợp dữ liệu |
+| Power Query | Nạp dữ liệu và thiết lập kiểu dữ liệu |
+| Power BI, DAX | Xây dựng mô hình, chỉ số và dashboard |
+| Streamlit | Xây dựng giao diện web tương tác |
+| Plotly | Trực quan hóa dữ liệu trên web |
 
-```powershell
-.\.venv\Scripts\python.exe validate_data.py
-```
+## Quy trình thực hiện
 
-Kết quả mong đợi: `OK: Blue Mart KPI khop nguon.`
+1. **Xác định bài toán:** lựa chọn câu hỏi kinh doanh và chỉ số cần theo dõi.
+2. **Chuẩn bị dữ liệu:** xử lý bản ghi trùng, chuẩn hóa ngày tháng, giá bán, chiết khấu và tên kênh.
+3. **Xây dựng mô hình:** liên kết dữ liệu bán hàng với danh mục sản phẩm, cửa hàng và bảng thời gian.
+4. **Thiết lập chỉ số:** tính doanh thu, lợi nhuận gộp, biên lợi nhuận gộp, sản lượng và số dòng bán.
+5. **Thiết kế dashboard:** tổ chức nội dung thành bốn trang theo từng nhóm câu hỏi.
+6. **Kiểm tra và phân tích:** đối chiếu tổng số liệu, kiểm tra bộ lọc và diễn giải kết quả.
 
-## 3. Triển khai thành link công khai miễn phí
+## Nội dung dashboard
 
-### Bước A — Tạo GitHub repository
+### 1. Tổng quan và mùa vụ
 
-1. Đăng nhập [github.com](https://github.com).
-2. Tạo repository mới, ví dụ `blue-mart-retail-analytics`, chọn **Public**.
-3. Tải **toàn bộ nội dung sau khi giải nén** (không tải file ZIP nguyên khối) lên thư mục gốc repository. Đảm bảo giữ đường dẫn `data/` và `.streamlit/`.
-4. Kiểm tra GitHub hiển thị `app.py`, `core.py`, `requirements.txt`, `data/sales.csv.gz`, `data/skus.csv`, `data/stores.csv`.
+- Theo dõi doanh thu, lợi nhuận gộp, biên lợi nhuận gộp, dòng bán và sản lượng.
+- Phân tích xu hướng theo tháng và so sánh cùng kỳ.
+- Đánh giá đóng góp doanh thu và lợi nhuận của từng loại ngày.
 
-**Lưu ý bảo mật:** Khi repository công khai, file dữ liệu đi kèm cũng công khai. Chỉ làm vậy nếu bạn có quyền công bố dữ liệu Blue Mart. Nếu dữ liệu không được phép đăng, bạn cần có giải pháp ẩn dữ liệu hoặc thay dữ liệu bằng bộ công khai phù hợp trước khi triển khai.
+### 2. Kênh và điểm bán
 
-### Bước B — Đăng lên Streamlit Community Cloud
+- So sánh cơ cấu doanh thu giữa các kênh.
+- Phân tích biến động dòng bán và doanh thu bình quân mỗi dòng.
+- Đối chiếu doanh thu và biên lợi nhuận gộp của cửa hàng với các mức tham chiếu.
 
-1. Mở [share.streamlit.io](https://share.streamlit.io), đăng nhập bằng GitHub.
-2. Chọn **Create app** → **Yup, I have an app**.
-3. Chọn repo `blue-mart-retail-analytics`, branch `main`, entrypoint `app.py`.
-4. Đặt tên URL nếu còn trống, ví dụ `blue-mart-retail-portfolio`.
-5. Chọn **Deploy** và kiểm tra ứng dụng chạy được.
-6. Vào link dạng `https://blue-mart-retail-portfolio.streamlit.app/` (đây là **ví dụ**, không phải link đã triển khai). Link thật sẽ được Streamlit cấp sau khi bạn deploy.
-7. Mở trong chế độ ẩn danh để xác nhận **nhà tuyển dụng không cần đăng nhập**.
+### 3. Chiến dịch và chiết khấu
 
-Tham khảo tài liệu chính thức: https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy
+- Phân tích phân bố ngày chiến dịch theo thời gian.
+- So sánh doanh thu, lợi nhuận gộp và dòng bán bình quân ngày.
+- Kiểm tra lãi gộp và tỷ lệ dòng bán lỗ theo từng mức chiết khấu.
 
-## 4. Cấu trúc thư mục
+> Ngày chiến dịch được quy ước là ngày có ít nhất 50% dòng bán được chiết khấu trên toàn chuỗi. Đây là nhãn suy ra từ dữ liệu, chưa phải lịch chiến dịch được xác nhận.
 
-```text
-BlueMart_Streamlit_Portfolio/
-├── app.py                 # Giao diện Streamlit (4 trang)
-├── core.py                # Dữ liệu, join, lọc và KPI
-├── validate_data.py       # Kiểm tra số liệu
-├── requirements.txt       # Thư viện cần cài
-├── run_windows.bat        # Nhấp đúp để chạy trên Windows
-├── .streamlit/
-│   └── config.toml        # Màu sắc ứng dụng
-└── data/
-    ├── sales.csv.gz       # 641,126 dòng
-    ├── skus.csv           # 200 SKU
-    └── stores.csv         # 50 cửa hàng
-```
+### 4. Danh mục sản phẩm
 
-## 5. Cách tính KPI đã đối chiếu với Power BI
+- Đánh giá đóng góp của ngành hàng, thương hiệu và SKU.
+- So sánh tỷ trọng doanh thu với tỷ trọng sản lượng.
+- Phân tích biên lợi nhuận gộp và phân nhóm ABC theo doanh thu.
 
-```text
-Revenue              = SUM(sales[total_value])
-Gross Profit         = SUM(sales[total_value] - sales[quantity] * RELATED(skus[cost_price]))
-Gross Margin %       = Gross Profit / Revenue
-Units Sold           = SUM(sales[quantity])
-Sales Rows           = COUNTROWS(sales)
-Transactions         = DISTINCTCOUNT(sales[sale_id])
-Campaign day         = % dòng giảm giá trong ngày >= 50% (trên toàn bộ nguồn)
-```
+## Kết quả tổng quan
 
-**Mốc kiểm tra trên toàn kỳ 01/01/2021–31/10/2025:**
+Các chỉ số sử dụng toàn kỳ và tất cả kênh bán.
 
-| Chỉ tiêu | Kết quả |
+| Chỉ số | Kết quả |
 | --- | ---: |
-| Doanh thu | 73,149,339.22 |
-| Lợi nhuận gộp | 21,078,696.70 |
-| Biên lợi nhuận gộp | 28.81598% |
-| Dòng bán / Sale IDs duy nhất | 641,126 |
-| Số lượng đơn vị | 1,675,836 |
-| SKUs / Stores | 200 / 50 |
-| Ngày chiến dịch / ngày thường | 800 / 965 |
+| Doanh thu | 73.149.339,22 |
+| Lợi nhuận gộp | 21.078.696,70 |
+| Biên lợi nhuận gộp | 28,82% |
+| Dòng bán | 641.126 |
+| Sản lượng | 1.675.836 đơn vị |
+| Ngày chiến dịch | 800 |
+| Ngày thường | 965 |
 
-**Lưu ý:** Doanh thu/GP giữ nguyên đơn vị tiền của dataset; không tự gán USD, VND hay AED. Năm 2025 chỉ tới tháng 10, nên không so sánh thẳng doanh thu cả năm với 2024 như hai kỳ 12 tháng tương đương.
+Giá trị tiền giữ nguyên đơn vị của bộ dữ liệu.
 
-## 6. Mẹo Portfolio
+## Insight nổi bật
 
-Thêm link Streamlit vào CV dưới tên **Blue Mart Retail Analytics | Interactive Dashboard**. Kèm 2–3 dòng: vấn đề kinh doanh, công cụ (Python/Streamlit/Plotly/Pandas), và insight có kiểm chứng. Có thể để ảnh chụp Power BI gốc bên cạnh web demo để nhà tuyển dụng nhìn thấy thiết kế BI nguyên bản.
+### Lợi nhuận gộp giảm nhanh hơn doanh thu
 
-## 7. Giới hạn
+Trong **T1–T10/2025 so với T1–T10/2024**, doanh thu giảm **3,37%**, trong khi lợi nhuận gộp giảm **6,60%**. Biên lợi nhuận gộp giảm từ **29,47% xuống 28,49%**.
 
-- Ứng dụng **không tự đồng bộ** khi bạn sửa báo cáo `.pbix` hoặc dữ liệu trong Power BI Service.
-- Thiết kế web và một số biểu đồ có thể khác dashboard Power BI; KPI cốt lõi đã được kiểm tra.
-- Gói Community Cloud miễn phí có giới hạn tài nguyên và ứng dụng có thể ngủ khi không được sử dụng; cần kiểm thử trên link thực tế.
-- Nếu bạn phải công bố báo cáo nhưng **không được công bố dữ liệu chi tiết**, không nên đưa các CSV nguồn trong repo public.
+Kết quả cho thấy cần theo dõi phần lãi giữ lại bên cạnh quy mô bán hàng.
+
+### Ngày chiến dịch có quy mô bán lớn nhưng biên thấp hơn
+
+Nhóm ngày chiến dịch chiếm **45,3% số ngày**, tạo **61,7% doanh thu**. Doanh thu bình quân ngày cao hơn ngày thường **94,49%**, nhưng lợi nhuận gộp bình quân ngày chỉ cao hơn **50,60%**.
+
+Đây là khác biệt quan sát được, chưa chứng minh tác động nhân quả của khuyến mãi.
+
+### SKU doanh thu cao vẫn có rủi ro chiết khấu
+
+**Chargers_1072** đứng thứ **2 về doanh thu** nhưng thứ **19 về lợi nhuận gộp**, với biên **15,85%**.
+
+Các mức giảm **25–35%** tạo **263 dòng bán lỗ**, tương ứng tổng lỗ gộp **9.667,08**. Kết quả hỗ trợ việc rà soát giá vốn và giới hạn ưu đãi theo từng SKU.
+
+### Doanh thu tập trung vào một phần danh mục
+
+**62/200 SKU tạo 69,72% doanh thu**, trong khi Electronics đóng góp **55,72% doanh thu toàn chuỗi**.
+
+Tuy nhiên, nhóm C vẫn tạo khoảng **2,13 triệu lợi nhuận gộp**, nên tỷ trọng doanh thu thấp chưa đủ để quyết định loại sản phẩm.
+
+## Đề xuất kinh doanh
+
+- **Kiểm soát chiết khấu theo SKU:** rà soát giá vốn và giới hạn ưu đãi, ưu tiên các mã có dòng bán dưới giá vốn.
+- **Đánh giá toàn giai đoạn:** theo dõi tổng lợi nhuận gộp, doanh thu và sản lượng thay vì chỉ nhìn tháng tăng trưởng.
+- **Theo dõi sản phẩm chủ lực:** kết hợp doanh thu, lợi nhuận gộp, biên lợi nhuận và rủi ro chiết khấu.
+- **Đánh giá cửa hàng theo nhóm tương đồng:** xem xét quy mô chênh lệch và xu hướng trước khi đề xuất can thiệp.
+
+Các hành động trên là đề xuất kiểm tra và thử nghiệm; dự án chưa đo lường hiệu quả sau triển khai.
+
+## Phạm vi và giới hạn
+
+- Dữ liệu mô phỏng, phục vụ phân tích tình huống kinh doanh.
+- Năm 2025 chỉ có dữ liệu đến tháng 10; so sánh tăng trưởng sử dụng cùng kỳ.
+- Lợi nhuận gộp chưa trừ phí sàn, giao hàng và chi phí vận hành.
+- Không có mã đơn hàng hoặc khách hàng để tính AOV và retention.
+- Phiên bản Streamlit tái dựng nội dung phân tích; giao diện và một số tương tác có thể khác Power BI.
